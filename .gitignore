@@ -1,0 +1,33 @@
+# MASTER ARENA - Git Ignore
+
+# Environment & Credentials
+.env
+.env.local
+.env.production
+
+# Dependencies
+/vendor/
+/node_modules/
+
+# Storage & Temporary files
+/storage/logs/*
+!/storage/logs/.gitkeep
+/storage/uploads/*
+!/storage/uploads/.gitkeep
+/storage/cache/*
+!/storage/cache/.gitkeep
+
+# IDE and OS files
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.DS_Store
+Thumbs.db
+
+# .NET Build artifacts
+/MasterArena.Desktop/bin/
+/MasterArena.Desktop/obj/
+*.userprefs
