@@ -2,6 +2,8 @@
 // Master Arena SaaS - App Configuration
 // Comments strictly in ASCII only.
 
+require_once __DIR__ . '/bootstrap.php';
+
 date_default_timezone_set('America/Sao_Paulo');
 
 return [

@@ -1,0 +1,17 @@
+# Master Arena SaaS - Root Directory Rewrite
+# Comments strictly in ASCII only.
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Allow direct access to database web installer tool
+    RewriteCond %{REQUEST_URI} ^/database/web_setup\.php
+    RewriteRule ^ - [L]
+
+    # Protect sensitive files and directories
+    RewriteRule ^(\.env|config/|storage/|app/) - [F,L]
+
+    # Route all other web traffic to public folder
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>

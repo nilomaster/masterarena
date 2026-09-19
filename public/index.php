@@ -9,6 +9,8 @@ use Database\Connection;
 
 header('Content-Type: application/json; charset=utf-8');
 
+$config = require __DIR__ . '/../config/database.php';
+
 try {
     $pdo = Connection::getInstance();
     $dbStatus = 'connected';
@@ -20,6 +22,8 @@ echo json_encode([
     'app' => 'MASTER ARENA SaaS',
     'status' => 'operational',
     'database' => $dbStatus,
+    'db_host' => $config['host'],
+    'db_name' => $config['database'],
     'timestamp' => date('Y-m-d H:i:s'),
     'timezone' => date_default_timezone_get(),
 ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
