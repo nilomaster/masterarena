@@ -1,4 +1,4 @@
-# Master Arena - Apache rewrite rules for public directory
+# Master Arena SaaS - Root Directory Rewrite
 # Comments strictly in ASCII only.
 
 <IfModule mod_rewrite.c>
@@ -8,17 +8,19 @@
     # Supports direct SSL, Locaweb reverse proxy and Cloudflare
     RewriteCond %{HTTPS} off [OR]
     RewriteCond %{HTTP:X-Forwarded-Proto} =http
+    RewriteCond %{REQUEST_URI} !^/database/(web_setup|create_users)\.php
     RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-    # Redirect Trailing Slashes If Not A Folder...
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_URI} (.+)/$
-    RewriteRule ^ %1 [L,R=301]
+    # Allow direct access to database web installer tools
+    RewriteCond %{REQUEST_URI} ^/database/(web_setup|create_users)\.php
+    RewriteRule ^ - [L]
 
-    # Handle Front Controller...
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule ^ index.php [L]
+    # Protect sensitive files and directories
+    RewriteRule ^(\.env|config/|storage/|app/) - [F,L]
+
+    # Route all other web traffic to public folder
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
 </IfModule>
 
 <IfModule mod_headers.c>

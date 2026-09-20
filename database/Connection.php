@@ -22,14 +22,10 @@ class Connection
         return self::$instance;
     }
 
-    // Create PDO connection with automatic database creation if requested
+    // Create PDO connection with automatic fallback
     public static function createConnection(bool $ensureDatabaseExists = true): PDO
     {
         $config = require __DIR__ . '/../config/database.php';
-
-        if ($ensureDatabaseExists) {
-            self::ensureDatabaseExists($config);
-        }
 
         $dsn = sprintf(
             'mysql:host=%s;port=%s;dbname=%s;charset=%s',
@@ -48,11 +44,22 @@ class Connection
             );
             return $pdo;
         } catch (PDOException $e) {
+            // If unknown database and ensure is true, attempt to create it
+            if ($ensureDatabaseExists && ($e->getCode() == 1049 || strpos($e->getMessage(), 'Unknown database') !== false)) {
+                self::ensureDatabaseExists($config);
+                return new PDO(
+                    $dsn,
+                    $config['username'],
+                    $config['password'],
+                    $config['options']
+                );
+            }
+
             throw new RuntimeException('Database connection failed: ' . $e->getMessage(), (int)$e->getCode(), $e);
         }
     }
 
-    // Ensure database exists before connecting to specific database
+    // Ensure database exists (used primarily in local development environment)
     private static function ensureDatabaseExists(array $config): void
     {
         $serverDsn = sprintf(
@@ -79,8 +86,8 @@ class Connection
             );
 
             $pdo->exec($sql);
-        } catch (PDOException $e) {
-            throw new RuntimeException('Failed to ensure database existence: ' . $e->getMessage(), (int)$e->getCode(), $e);
+        } catch (Throwable $e) {
+            // Silently ignore if creation privileges are not granted on shared hosting
         }
     }
 

@@ -2,6 +2,8 @@
 // Master Arena SaaS - Database Configuration
 // Comments strictly in ASCII only.
 
+require_once __DIR__ . '/bootstrap.php';
+
 return [
     'driver' => 'mysql',
     'host' => getenv('DB_HOST') ?: '127.0.0.1',
