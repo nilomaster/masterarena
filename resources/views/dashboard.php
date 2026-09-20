@@ -616,9 +616,10 @@
                             <span class="metric-label">Reservas Hoje</span>
                             <div class="metric-icon-box icon-cyan">&#128197;</div>
                         </div>
-                        <div class="metric-value">12</div>
-                        <span class="metric-trend">&#8593; 85% de ocupacao</span>
+                        <div class="metric-value" id="todayBookingsCount">0</div>
+                        <span class="metric-trend" id="todayBookingsTrend">&#10004; Carregando reservas...</span>
                     </div>
+
 
                     <div class="metric-card">
                         <div class="metric-header">
@@ -953,6 +954,7 @@
                     switchTab(hash);
                 } else {
                     loadCourts();
+                    loadBookingStats();
                 }
 
                 loadArenaDetails();
@@ -988,15 +990,49 @@
             if (tabId === 'dashboard' || tabId === 'quadras') {
                 loadCourts();
                 loadModalidades();
+                if (tabId === 'dashboard') {
+                    loadBookingStats();
+                }
             } else if (tabId === 'arenas') {
                 loadArenaDetails();
             } else if (tabId === 'agendamentos') {
                 loadGrade();
             }
-        }async function loadCourts() {
+        }
+
+        // Fetch real-time booking statistics for dashboard card
+        async function loadBookingStats() {
+            const token = sessionStorage.getItem('masterarena_token');
+            if (!token || !currentArenaId) return;
+
+            try {
+                const res = await fetch(`/api/v1/arenas/${currentArenaId}/agendamentos/stats`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.data) {
+                        const count = data.data.reservas_hoje ?? 0;
+                        const total = data.data.total_reservas ?? 0;
+                        const el = document.getElementById('todayBookingsCount');
+                        const trendEl = document.getElementById('todayBookingsTrend');
+                        if (el) el.innerText = count;
+                        if (trendEl) trendEl.innerText = `${total} reservas no total`;
+                    }
+                }
+            } catch (e) {
+                // Ignore stats fetch error
+            }
+        }
+
+        async function loadCourts() {
             const token = sessionStorage.getItem('masterarena_token');
             const dashTbody = document.getElementById('dashboardCourtsBody');
             const fullTbody = document.getElementById('fullCourtsTableBody');
+
 
             try {
                 const res = await fetch(`/api/v1/arenas/${currentArenaId}/quadras`, {

@@ -92,7 +92,7 @@ class Bloqueio
                 LEFT JOIN `quadras` q ON b.quadra_id = q.id 
                 WHERE b.`arena_id` = :arena_id 
                   AND b.`quadra_id` = :quadra_id 
-                  AND b.`data_inicio` <= :data AND b.`data_fim` >= :data 
+                  AND b.`data_inicio` <= :data_fim_check AND b.`data_fim` >= :data_inicio_check 
                   AND b.`hora_inicio` < :hora_fim AND b.`hora_fim` > :hora_inicio 
                 LIMIT 1";
 
@@ -100,7 +100,8 @@ class Bloqueio
         $stmt->execute([
             ':arena_id' => $arenaId,
             ':quadra_id' => $quadraId,
-            ':data' => $date,
+            ':data_fim_check' => $date,
+            ':data_inicio_check' => $date,
             ':hora_inicio' => $horaInicio,
             ':hora_fim' => $horaFim,
         ]);
@@ -108,6 +109,7 @@ class Bloqueio
         $row = $stmt->fetch();
         return $row ?: null;
     }
+
 
     // Delete a block
     public function delete(int $id): bool
