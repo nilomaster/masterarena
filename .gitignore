@@ -28,6 +28,7 @@
 Thumbs.db
 
 # .NET Build artifacts
-/MasterArena.Desktop/bin/
-/MasterArena.Desktop/obj/
+**/bin/
+**/obj/
 *.userprefs
+*.user
