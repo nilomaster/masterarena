@@ -63,6 +63,12 @@ abstract class BaseController
         Response::validationError($errors, $message);
     }
 
+    // Return unprocessable entity error response
+    protected function unprocessableEntity(array $errors = [], string $message = 'Entidade nao processavel.'): void
+    {
+        Response::validationError($errors, $message);
+    }
+
     // Validate request inputs and respond with 422 if validation fails
     protected function validate(Request $request, array $rules): void
     {
