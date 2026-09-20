@@ -20,9 +20,11 @@ class Response
 
         echo json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
-        if (!defined('MASTER_ARENA_TEST_MODE')) {
-            exit;
+        if (defined('MASTER_ARENA_TEST_MODE')) {
+            throw new EarlyExitException($statusCode, $data);
         }
+
+        exit;
     }
 
     // Standard API success response format

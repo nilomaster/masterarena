@@ -48,15 +48,22 @@ function simulateRequest(string $method, string $uri, array $body = [], array $h
     require __DIR__ . '/../routes/api.php';
 
     ob_start();
+    $code = 200;
+    $json = [];
     try {
         $router->dispatch($request);
+    } catch (\App\Core\EarlyExitException $e) {
+        $code = $e->getStatusCode();
+        $json = $e->getData();
     } catch (Throwable $e) {
+        ob_end_clean();
         return ['status' => 500, 'error' => $e->getMessage()];
     }
     $output = ob_get_clean();
 
-    $code = http_response_code();
-    $json = json_decode($output, true);
+    if (empty($json) && !empty($output)) {
+        $json = json_decode($output, true);
+    }
 
     return [
         'status' => $code,

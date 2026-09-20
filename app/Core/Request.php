@@ -227,4 +227,19 @@ class Request
 
         return $errors;
     }
+
+    // Authenticated user property
+    private ?array $user = null;
+
+    // Set authenticated user context
+    public function setUser(array $user): void
+    {
+        $this->user = $user;
+    }
+
+    // Get authenticated user context
+    public function getUser(): ?array
+    {
+        return $this->user;
+    }
 }
