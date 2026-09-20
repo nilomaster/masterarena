@@ -157,13 +157,17 @@ if ($dbConnected) {
                         <?php endforeach; ?>
                     </ul>
                 <?php else: ?>
-                    <p style="color: #94a3b8; font-size: 0.9rem;">Nenhuma tabela encontrada. Clique no botão abaixo para criar todas as 18 tabelas e dados iniciais.</p>
+                    <p style="color: #94a3b8; font-size: 0.9rem;">Nenhuma tabela encontrada. Clique no botao abaixo para executar as migracoes.</p>
                 <?php endif; ?>
             </div>
 
-            <div style="margin-top: 1rem; display: flex; gap: 0.75rem;">
-                <a href="?action=run_migrations&seed=1" class="btn">Executar Migrations e Dados Iniciais (Seeds)</a>
+            <div style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 0.75rem;">
+                <a href="?action=run_migrations" class="btn" style="background: #0284c7;">Executar Apenas Migracoes Pendentes</a>
+                <a href="?action=run_migrations&seed=1" class="btn" style="background: #475569;">Executar Migracoes + Seeds Iniciais</a>
             </div>
+            <p style="margin-top: 0.75rem; font-size: 0.85rem; color: #94a3b8;">
+                * Para aplicar as novas tabelas da Etapa 8 (Financeiro/Caixa), clique em <strong>Executar Apenas Migracoes Pendentes</strong>.
+            </p>
         <?php else: ?>
             <div class="card">
                 <h3 style="margin-bottom: 0.5rem; color: #f87171;">Atenção: Banco de Dados não conectado</h3>

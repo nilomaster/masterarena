@@ -19,9 +19,12 @@ use App\Controllers\Api\V1\QuadraController;
 use App\Controllers\Api\V1\ScheduleController;
 use App\Controllers\Api\V1\CupomController;
 use App\Controllers\Api\V1\BookingController;
+use App\Controllers\Api\V1\PaymentController;
+use App\Controllers\Api\V1\CashRegisterController;
 use App\Middleware\OptionalAuthMiddleware;
 
 /** @var Router $router */
+
 
 $router->group('/api/v1', function (Router $api) {
     // API discovery and status routes
@@ -110,8 +113,26 @@ $router->group('/api/v1', function (Router $api) {
     $api->get('/agendamentos/{id}', [BookingController::class, 'show'], [OptionalAuthMiddleware::class]);
     $api->patch('/agendamentos/{id}/status', [BookingController::class, 'updateStatus'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
     $api->post('/agendamentos/{id}/cancelar', [BookingController::class, 'cancel'], [OptionalAuthMiddleware::class]);
+
+    // Financial, Payments & PIX Endpoints
+    $api->post('/agendamentos/{id}/pix', [PaymentController::class, 'createBookingPix'], [OptionalAuthMiddleware::class]);
+    $api->get('/arenas/{arena_id}/pagamentos', [PaymentController::class, 'index'], [AuthMiddleware::class, RequireStaffMiddleware::class]);
+    $api->post('/arenas/{arena_id}/pagamentos', [PaymentController::class, 'createDirect'], [AuthMiddleware::class, RequireStaffMiddleware::class]);
+    $api->get('/pagamentos/{id}', [PaymentController::class, 'show'], [AuthMiddleware::class]);
+    $api->post('/pagamentos/{id}/confirmar', [PaymentController::class, 'confirm'], [AuthMiddleware::class, RequireStaffMiddleware::class]);
+    $api->post('/pagamentos/{id}/estornar', [PaymentController::class, 'refund'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
+    $api->get('/arenas/{arena_id}/financeiro/resumo', [PaymentController::class, 'summary'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
+    $api->post('/webhooks/pix', [PaymentController::class, 'webhookPix']);
+
+    // Cash Register (Caixa Balcao) Endpoints
+    $api->get('/arenas/{arena_id}/caixa/status', [CashRegisterController::class, 'status'], [AuthMiddleware::class, RequireStaffMiddleware::class]);
+    $api->post('/arenas/{arena_id}/caixa/abrir', [CashRegisterController::class, 'open'], [AuthMiddleware::class, RequireStaffMiddleware::class]);
+    $api->post('/arenas/{arena_id}/caixa/movimentacao', [CashRegisterController::class, 'movement'], [AuthMiddleware::class, RequireStaffMiddleware::class]);
+    $api->post('/arenas/{arena_id}/caixa/fechar', [CashRegisterController::class, 'close'], [AuthMiddleware::class, RequireStaffMiddleware::class]);
+    $api->get('/arenas/{arena_id}/caixa/historico', [CashRegisterController::class, 'history'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
 }, [
     CorsMiddleware::class,
     JsonMiddleware::class,
 ]);
+
 

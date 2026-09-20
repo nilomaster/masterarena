@@ -623,12 +623,13 @@
 
                     <div class="metric-card">
                         <div class="metric-header">
-                            <span class="metric-label">Previsao de Caixa</span>
+                            <span class="metric-label">Faturamento Hoje</span>
                             <div class="metric-icon-box icon-purple">&#128176;</div>
                         </div>
-                        <div class="metric-value">R$ 1.840</div>
-                        <span class="metric-trend">&#10004; Pagamentos via PIX</span>
+                        <div class="metric-value" id="todayRevenueVal">R$ 0,00</div>
+                        <span class="metric-trend" id="todayRevenueTrend">&#10004; Carregando caixa...</span>
                     </div>
+
 
                     <div class="metric-card">
                         <div class="metric-header">
@@ -849,21 +850,84 @@
             <!-- TAB 5: FINANCEIRO & CAIXA -->
             <section id="view-financeiro" class="tab-view">
                 <div class="panel-box">
-                    <div class="panel-header">
+                    <div class="panel-header" style="flex-wrap: wrap; gap: 16px;">
                         <div>
-                            <h2 class="panel-title">Financeiro & Fluxo de Caixa</h2>
-                            <span style="font-size: 0.8rem; color: var(--text-muted);">Cobrancas PIX e integracao com gateway Mercado Pago / Efí.</span>
+                            <h2 class="panel-title">Financeiro, Pagamentos & Caixa Balcao</h2>
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">
+                                Controle de fluxo de caixa, recebimentos via PIX, cartoes e conciliacao de agendamentos.
+                            </span>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <button onclick="loadFinancialSummary()" class="action-btn-pill">&#8635; Atualizar</button>
+                            <button id="btnOpenCaixa" onclick="openCaixaModal()" class="action-btn-primary">+ Abrir Caixa</button>
+                            <button id="btnMovCaixa" onclick="openMovementModal()" class="action-btn-pill" style="display: none;">+ Sangria / Suprimento</button>
+                            <button id="btnCloseCaixa" onclick="closeCaixaModal()" class="action-btn-pill" style="display: none; background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.3); color: #fca5a5;">Encerrar Caixa</button>
                         </div>
                     </div>
-                    <div style="background: rgba(168, 85, 247, 0.08); border: 1px dashed rgba(168, 85, 247, 0.3); border-radius: 12px; padding: 36px; text-align: center;">
-                        <div style="font-size: 2.5rem; margin-bottom: 12px;">&#128179;</div>
-                        <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 8px;">Modulo Financeiro e Pagamentos PIX Automáticos</h3>
-                        <p style="color: var(--text-muted); max-width: 600px; margin: 0 auto; font-size: 0.92rem;">
-                            Planejado para a <strong>ETAPA 8</strong> (Integracao com Gateway de Pagamentos, Webhooks e Split de Recebimento).
-                        </p>
+
+                    <!-- Caixa Shift Status Banner -->
+                    <div id="caixaStatusBanner" style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span style="font-size: 1.4rem;">&#128188;</span>
+                            <div>
+                                <div style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Status do Caixa da Arena</div>
+                                <div id="caixaStatusText" style="font-size: 1.05rem; font-weight: 700; color: var(--accent-lime);">Consultando caixa...</div>
+                            </div>
+                        </div>
+                        <div id="caixaDetailsBox" style="display: flex; gap: 20px; font-size: 0.88rem;">
+                            <!-- Injected by JS -->
+                        </div>
                     </div>
+
+                    <!-- Financial Summary Cards -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px;">
+                        <div class="info-item">
+                            <div class="info-item-label">Faturamento Bruto</div>
+                            <div class="info-item-val" id="finFaturamentoBruto" style="color: var(--accent-lime); font-size: 1.25rem;">R$ 0,00</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-item-label">Recebido via PIX</div>
+                            <div class="info-item-val" id="finPixTotal" style="color: var(--accent-cyan);">R$ 0,00</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-item-label">Recebido em Dinheiro</div>
+                            <div class="info-item-val" id="finDinheiroTotal">R$ 0,00</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-item-label">Cartao (Cred/Deb)</div>
+                            <div class="info-item-val" id="finCartaoTotal">R$ 0,00</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-item-label">Despesas Operacionais</div>
+                            <div class="info-item-val" id="finDespesasTotal" style="color: #f87171;">R$ 0,00</div>
+                        </div>
+                    </div>
+
+                    <!-- Transactions Table -->
+                    <h3 style="font-size: 0.95rem; margin-bottom: 12px; color: var(--accent-lime); font-weight: 700;">Extrato de Lancamentos Recentes</h3>
+                    <table class="arena-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Data/Hora</th>
+                                <th>Descricao</th>
+                                <th>Cliente</th>
+                                <th>Metodo</th>
+                                <th>Valor</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pagamentosTableBody">
+                            <tr>
+                                <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 24px;">
+                                    Carregando movimentacoes financeiras...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </section>
+
 
             <!-- TAB 6: BAR & COMANDAS -->
             <section id="view-comandas" class="tab-view">
@@ -997,6 +1061,8 @@
                 loadArenaDetails();
             } else if (tabId === 'agendamentos') {
                 loadGrade();
+            } else if (tabId === 'financeiro') {
+                loadFinancialSummary();
             }
         }
 
@@ -1026,9 +1092,239 @@
             } catch (e) {
                 // Ignore stats fetch error
             }
+
+            // Also load financial summary for today revenue card
+            loadFinancialSummary();
+        }
+
+        // Fetch financial metrics, cash register status and transactions
+        async function loadFinancialSummary() {
+            const token = sessionStorage.getItem('masterarena_token');
+            if (!token || !currentArenaId) return;
+
+            try {
+                // 1. Financial summary metrics
+                const resSum = await fetch(`/api/v1/arenas/${currentArenaId}/financeiro/resumo`, {
+                    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+                });
+                if (resSum.ok) {
+                    const data = await resSum.json();
+                    const r = data.data && data.data.resumo ? data.data.resumo : null;
+                    if (r) {
+                        const fatBruto = parseFloat(r.faturamento_bruto || 0).toFixed(2).replace('.', ',');
+                        const cardVal = document.getElementById('todayRevenueVal');
+                        const cardTrend = document.getElementById('todayRevenueTrend');
+                        if (cardVal) cardVal.innerText = `R$ ${fatBruto}`;
+                        if (cardTrend) cardTrend.innerText = `${r.quantidade_transacoes_pagas || 0} transacoes liquidadas`;
+
+                        const finBrutoEl = document.getElementById('finFaturamentoBruto');
+                        if (finBrutoEl) finBrutoEl.innerText = `R$ ${fatBruto}`;
+
+                        const metodos = r.metodos || {};
+                        const pixEl = document.getElementById('finPixTotal');
+                        if (pixEl) pixEl.innerText = `R$ ${parseFloat(metodos.PIX || 0).toFixed(2).replace('.', ',')}`;
+
+                        const dinEl = document.getElementById('finDinheiroTotal');
+                        if (dinEl) dinEl.innerText = `R$ ${parseFloat(metodos.DINHEIRO || 0).toFixed(2).replace('.', ',')}`;
+
+                        const cartaoTotal = (parseFloat(metodos.CARTAO_CREDITO || 0) + parseFloat(metodos.CARTAO_DEBITO || 0)).toFixed(2).replace('.', ',');
+                        const cardEl = document.getElementById('finCartaoTotal');
+                        if (cardEl) cardEl.innerText = `R$ ${cartaoTotal}`;
+
+                        const despEl = document.getElementById('finDespesasTotal');
+                        if (despEl) despEl.innerText = `R$ ${parseFloat(r.total_despesas || 0).toFixed(2).replace('.', ',')}`;
+                    }
+                }
+
+                // 2. Cash register status
+                const resCaixa = await fetch(`/api/v1/arenas/${currentArenaId}/caixa/status`, {
+                    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+                });
+                if (resCaixa.ok) {
+                    const data = await resCaixa.json();
+                    const c = data.data && data.data.caixa ? data.data.caixa : null;
+                    const statusText = document.getElementById('caixaStatusText');
+                    const detailsBox = document.getElementById('caixaDetailsBox');
+                    const btnOpen = document.getElementById('btnOpenCaixa');
+                    const btnMov = document.getElementById('btnMovCaixa');
+                    const btnClose = document.getElementById('btnCloseCaixa');
+
+                    if (c && c.caixa_aberto && c.sessao) {
+                        if (statusText) {
+                            statusText.innerText = `ABERTO (Turno #${c.sessao.id})`;
+                            statusText.style.color = 'var(--accent-lime)';
+                        }
+                        if (btnOpen) btnOpen.style.display = 'none';
+                        if (btnMov) btnMov.style.display = 'inline-block';
+                        if (btnClose) btnClose.style.display = 'inline-block';
+
+                        const b = c.balanco || {};
+                        if (detailsBox) {
+                            detailsBox.innerHTML = `
+                                <div><strong style="color: var(--text-muted);">Operador:</strong> ${escapeHtml(c.sessao.usuario_abertura_nome || 'Equipe')}</div>
+                                <div><strong style="color: var(--text-muted);">Fundo Inicial:</strong> R$ ${parseFloat(b.saldo_inicial || 0).toFixed(2).replace('.', ',')}</div>
+                                <div><strong style="color: var(--accent-cyan);">Gaveta Esperada:</strong> R$ ${parseFloat(b.saldo_dinheiro_esperado || 0).toFixed(2).replace('.', ',')}</div>
+                            `;
+                        }
+                    } else {
+                        if (statusText) {
+                            statusText.innerText = 'FECHADO (Nenhum turno aberto)';
+                            statusText.style.color = '#94a3b8';
+                        }
+                        if (btnOpen) btnOpen.style.display = 'inline-block';
+                        if (btnMov) btnMov.style.display = 'none';
+                        if (btnClose) btnClose.style.display = 'none';
+                        if (detailsBox) detailsBox.innerHTML = '<span style="color: var(--text-muted);">Clique em "+ Abrir Caixa" para iniciar as operacoes do turno.</span>';
+                    }
+                }
+
+                // 3. Transactions table
+                const resPag = await fetch(`/api/v1/arenas/${currentArenaId}/pagamentos?per_page=15`, {
+                    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+                });
+                if (resPag.ok) {
+                    const data = await resPag.json();
+                    const pagamentos = data.data && data.data.pagamentos ? data.data.pagamentos : [];
+                    const tbody = document.getElementById('pagamentosTableBody');
+                    if (tbody) {
+                        if (pagamentos.length === 0) {
+                            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 24px;">Nenhuma transacao financeira registrada ate o momento.</td></tr>';
+                        } else {
+                            tbody.innerHTML = pagamentos.map(p => {
+                                const isPago = p.status === 'PAGO';
+                                const statusBg = isPago ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)';
+                                const statusColor = isPago ? '#00f279' : '#fbbf24';
+                                const isReceita = p.tipo === 'RECEITA';
+                                const valColor = isReceita ? 'var(--text-main)' : '#f87171';
+                                const sinal = isReceita ? '+' : '-';
+
+                                return `
+                                    <tr>
+                                        <td><code>#${p.id}</code></td>
+                                        <td style="color: var(--text-muted); font-size: 0.82rem;">${escapeHtml(p.created_at || '-')}</td>
+                                        <td><strong>${escapeHtml(p.descricao || p.categoria)}</strong></td>
+                                        <td>${escapeHtml(p.cliente_nome || 'Balcao / Geral')}</td>
+                                        <td><span class="action-btn-pill" style="font-size: 0.72rem; padding: 2px 8px;">${p.metodo_pagamento}</span></td>
+                                        <td style="font-weight: 700; color: ${valColor};">${sinal} R$ ${parseFloat(p.valor || 0).toFixed(2).replace('.', ',')}</td>
+                                        <td>
+                                            <span style="background: ${statusBg}; color: ${statusColor}; padding: 3px 8px; border-radius: 6px; font-size: 0.72rem; font-weight: 700;">
+                                                ${p.status}
+                                            </span>
+                                        </td>
+                                    </tr>`;
+                            }).join('');
+                        }
+                    }
+                }
+            } catch (e) {
+                // Ignore financial load error
+            }
+        }
+
+        // Open cash register shift
+        async function openCaixaModal() {
+            const valorInput = prompt('Informe o valor do Fundo de Troco inicial (ex: 100.00):', '100.00');
+            if (valorInput === null) return;
+
+            const saldoInicial = parseFloat(valorInput.replace(',', '.'));
+            if (isNaN(saldoInicial) || saldoInicial < 0) {
+                alert('Valor de saldo inicial invalido.');
+                return;
+            }
+
+            const token = sessionStorage.getItem('masterarena_token');
+            try {
+                const res = await fetch(`/api/v1/arenas/${currentArenaId}/caixa/abrir`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({ saldo_inicial: saldoInicial })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert('Turno de caixa aberto com sucesso!');
+                    loadFinancialSummary();
+                } else {
+                    alert(data.message || 'Erro ao abrir caixa.');
+                }
+            } catch (e) {
+                alert('Erro de conexao ao abrir caixa.');
+            }
+        }
+
+        // Cash register movement (Sangria / Suprimento)
+        async function openMovementModal() {
+            const tipo = prompt('Tipo de movimentacao (Digite SANGRIA para retirada ou SUPRIMENTO para reforco de troco):', 'SANGRIA');
+            if (!tipo) return;
+            const tipoUpper = tipo.trim().toUpperCase();
+            if (!['SANGRIA', 'SUPRIMENTO', 'DESPESA'].includes(tipoUpper)) {
+                alert('Tipo invalido. Escolha SANGRIA ou SUPRIMENTO.');
+                return;
+            }
+
+            const valorInput = prompt('Informe o valor (ex: 50.00):', '50.00');
+            if (valorInput === null) return;
+            const valor = parseFloat(valorInput.replace(',', '.'));
+            if (isNaN(valor) || valor <= 0) {
+                alert('Valor invalido.');
+                return;
+            }
+
+            const motivo = prompt('Informe o motivo ou justificativa:', tipoUpper === 'SANGRIA' ? 'Sangria para o cofre' : 'Reforco de troco');
+            if (!motivo) return;
+
+            const token = sessionStorage.getItem('masterarena_token');
+            try {
+                const res = await fetch(`/api/v1/arenas/${currentArenaId}/caixa/movimentacao`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({ tipo: tipoUpper, valor, motivo })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert('Movimentacao registrada com sucesso!');
+                    loadFinancialSummary();
+                } else {
+                    alert(data.message || 'Erro ao registrar movimentacao.');
+                }
+            } catch (e) {
+                alert('Erro de conexao ao movimentar caixa.');
+            }
+        }
+
+        // Close cash register shift
+        async function closeCaixaModal() {
+            const valorInput = prompt('CONFERENCIA CEGA: Informe o valor em DINHEIRO FISICO contado na gaveta (ex: 350.00):', '0.00');
+            if (valorInput === null) return;
+            const saldoInformado = parseFloat(valorInput.replace(',', '.'));
+            if (isNaN(saldoInformado) || saldoInformado < 0) {
+                alert('Valor invalido.');
+                return;
+            }
+
+            const token = sessionStorage.getItem('masterarena_token');
+            try {
+                const res = await fetch(`/api/v1/arenas/${currentArenaId}/caixa/fechar`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({ saldo_informado: saldoInformado })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    const dif = parseFloat(data.data.diferenca || 0);
+                    const statusDif = data.data.status_diferenca || 'EXATO';
+                    let msg = `Turno encerrado com sucesso!\n\nSaldo Informado: R$ ${saldoInformado.toFixed(2)}\nSaldo Esperado pelo Sistema: R$ ${parseFloat(data.data.balanco.saldo_dinheiro_esperado || 0).toFixed(2)}\nResultado: ${statusDif} (Diferenca: R$ ${dif.toFixed(2)})`;
+                    alert(msg);
+                    loadFinancialSummary();
+                } else {
+                    alert(data.message || 'Erro ao encerrar caixa.');
+                }
+            } catch (e) {
+                alert('Erro de conexao ao fechar caixa.');
+            }
         }
 
         async function loadCourts() {
+
             const token = sessionStorage.getItem('masterarena_token');
             const dashTbody = document.getElementById('dashboardCourtsBody');
             const fullTbody = document.getElementById('fullCourtsTableBody');
