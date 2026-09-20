@@ -14,6 +14,9 @@ use App\Middleware\RequireSuperadminMiddleware;
 use App\Controllers\Api\V1\ApiController;
 use App\Controllers\Api\V1\AuthController;
 use App\Controllers\Api\V1\ArenaController;
+use App\Controllers\Api\V1\ModalidadeController;
+use App\Controllers\Api\V1\QuadraController;
+use App\Middleware\OptionalAuthMiddleware;
 
 /** @var Router $router */
 
@@ -56,6 +59,21 @@ $router->group('/api/v1', function (Router $api) {
     $api->patch('/arenas/{id}/status', [ArenaController::class, 'updateStatus'], [AuthMiddleware::class, RequireSuperadminMiddleware::class]);
     $api->get('/arenas/{id}/settings', [ArenaController::class, 'getSettings'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
     $api->put('/arenas/{id}/settings', [ArenaController::class, 'updateSettings'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
+
+    // Sports (Modalidades) Endpoints
+    $api->get('/arenas/{arena_id}/modalidades', [ModalidadeController::class, 'index'], [OptionalAuthMiddleware::class]);
+    $api->post('/arenas/{arena_id}/modalidades', [ModalidadeController::class, 'create'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
+    $api->get('/modalidades/{id}', [ModalidadeController::class, 'show'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
+    $api->put('/modalidades/{id}', [ModalidadeController::class, 'update'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
+    $api->delete('/modalidades/{id}', [ModalidadeController::class, 'delete'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
+
+    // Courts (Quadras) Endpoints
+    $api->get('/arenas/{arena_id}/quadras', [QuadraController::class, 'index'], [OptionalAuthMiddleware::class]);
+    $api->post('/arenas/{arena_id}/quadras', [QuadraController::class, 'create'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
+    $api->get('/quadras/{id}', [QuadraController::class, 'show'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
+    $api->put('/quadras/{id}', [QuadraController::class, 'update'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
+    $api->patch('/quadras/{id}/status', [QuadraController::class, 'updateStatus'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
+    $api->delete('/quadras/{id}', [QuadraController::class, 'delete'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
 }, [
     CorsMiddleware::class,
     JsonMiddleware::class,
