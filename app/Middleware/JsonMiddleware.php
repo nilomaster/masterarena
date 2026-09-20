@@ -16,6 +16,12 @@ class JsonMiddleware
             header('X-Content-Type-Options: nosniff');
             header('X-Frame-Options: DENY');
             header('X-XSS-Protection: 1; mode=block');
+            header('Referrer-Policy: strict-origin-when-cross-origin');
+
+            // Send HTTP Strict Transport Security if request is on HTTPS
+            if ($request->isSecure()) {
+                header('Strict-Transport-Security: max-age=31536000; includeSubDomains; preload');
+            }
         }
     }
 }

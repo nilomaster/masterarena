@@ -138,6 +138,13 @@ class Request
         return null;
     }
 
+    // Determine if request expects a JSON response
+    public function wantsJson(): bool
+    {
+        $accept = (string)$this->getHeader('accept', '');
+        return str_contains($accept, 'application/json') || str_contains($accept, '+json');
+    }
+
     // Set route parameters (e.g. id, slug)
     public function setParams(array $params): void
     {
@@ -241,5 +248,29 @@ class Request
     public function getUser(): ?array
     {
         return $this->user;
+    }
+
+    // Check if request is served over secure HTTPS connection
+    public function isSecure(): bool
+    {
+        if (!empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off') {
+            return true;
+        }
+
+        if (isset($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443) {
+            return true;
+        }
+
+        $proto = $this->headers['x-forwarded-proto'] ?? ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '');
+        if (strtolower((string)$proto) === 'https') {
+            return true;
+        }
+
+        $ssl = $this->headers['x-forwarded-ssl'] ?? ($_SERVER['HTTP_X_FORWARDED_SSL'] ?? '');
+        if (strtolower((string)$ssl) === 'on') {
+            return true;
+        }
+
+        return false;
     }
 }

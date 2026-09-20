@@ -37,31 +37,28 @@ set_error_handler(function ($severity, $message, $file, $line) {
 $request = new Request();
 $router = new Router();
 
-// Root route
+// Root route: Serve rich web landing page for browser, or clean JSON status if explicitly requested
 $router->get('/', function (Request $req) {
-    $dbStatus = 'disconnected';
-    try {
-        $pdo = Connection::getInstance();
-        $stmt = $pdo->query("SELECT 1");
-        if ($stmt->fetchColumn() == 1) {
-            $dbStatus = 'connected';
+    if (!$req->wantsJson() && !defined('MASTER_ARENA_TEST_MODE')) {
+        $landingPath = __DIR__ . '/../resources/views/landing.php';
+        if (file_exists($landingPath)) {
+            require_once $landingPath;
+            exit;
         }
-    } catch (Throwable $e) {
-        $dbStatus = 'error: ' . $e->getMessage();
     }
 
     Response::success([
         'app' => 'MASTER ARENA SaaS',
         'status' => 'operational',
-        'database' => $dbStatus,
-        'api_documentation' => '/api/v1',
-        'timestamp' => date('Y-m-d H:i:s'),
-        'timezone' => date_default_timezone_get(),
+        'version' => '1.0.0',
     ], 'MASTER ARENA SaaS - Sistema Operacional.');
 });
 
-// Load API routes
-require_once __DIR__ . '/../routes/api.php';
+// Load API routes if file exists
+$apiRoutesFile = __DIR__ . '/../routes/api.php';
+if (file_exists($apiRoutesFile)) {
+    require_once $apiRoutesFile;
+}
 
 // Dispatch incoming request
 $router->dispatch($request);
