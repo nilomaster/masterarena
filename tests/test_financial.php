@@ -154,12 +154,17 @@ assertTest(
 
 echo "\n--- 2. Testing Booking PIX Billing & Automated Reconciliation ---\n";
 
-$targetDate = date('Y-m-d', strtotime('+10 days'));
+$targetDays = rand(30, 200);
+$targetDate = date('Y-m-d', strtotime("+{$targetDays} days"));
+$randHour = rand(7, 21);
+$testStart = sprintf('%02d:00', $randHour);
+$testEnd = sprintf('%02d:00', $randHour + 1);
+
 $bookingRes = requestApi('POST', "/api/v1/arenas/{$arenaId}/agendamentos", [
     'quadra_id' => 1,
     'data' => $targetDate,
-    'hora_inicio' => '10:00',
-    'hora_fim' => '11:00',
+    'hora_inicio' => $testStart,
+    'hora_fim' => $testEnd,
     'cliente_nome' => 'Marcos Pagador PIX',
     'cliente_telefone' => '11987654321',
 ]);

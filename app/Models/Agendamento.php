@@ -262,4 +262,113 @@ class Agendamento
 
         return $stmt->fetchAll() ?: [];
     }
+
+    // Find booking by checkin code in an arena
+    public function findByCheckinCode(int $arenaId, string $codigo): ?array
+    {
+        $idFallback = is_numeric($codigo) ? (int)$codigo : 0;
+
+        $stmt = $this->pdo->prepare("SELECT a.*, 
+                    q.nome AS quadra_nome, 
+                    m.nome AS modalidade_nome,
+                    c.nome AS cliente_nome, 
+                    c.whatsapp AS cliente_whatsapp 
+                FROM `agendamentos` a
+                LEFT JOIN `quadras` q ON a.quadra_id = q.id
+                LEFT JOIN `modalidades` m ON q.modalidade_id = m.id
+                LEFT JOIN `clientes` c ON a.cliente_id = c.id
+                WHERE a.`arena_id` = :arena_id 
+                  AND (a.`codigo_checkin` = :codigo OR a.`id` = :id_fallback)
+                LIMIT 1");
+
+        $stmt->execute([
+            ':arena_id' => $arenaId,
+            ':codigo' => trim($codigo),
+            ':id_fallback' => $idFallback,
+        ]);
+
+        $row = $stmt->fetch();
+        return $row ?: null;
+    }
+
+    // Find today's bookings for a client by phone number
+    public function findTodayBookingsByPhone(int $arenaId, string $telefone): array
+    {
+        $cleanPhone = preg_replace('/\D/', '', $telefone);
+        $today = date('Y-m-d');
+
+        $stmt = $this->pdo->prepare("SELECT a.*, 
+                    q.nome AS quadra_nome, 
+                    m.nome AS modalidade_nome,
+                    c.nome AS cliente_nome, 
+                    c.whatsapp AS cliente_whatsapp 
+                FROM `agendamentos` a
+                JOIN `clientes` c ON a.cliente_id = c.id
+                LEFT JOIN `quadras` q ON a.quadra_id = q.id
+                LEFT JOIN `modalidades` m ON q.modalidade_id = m.id
+                WHERE a.`arena_id` = :arena_id 
+                  AND a.`data` = :data
+                  AND a.`status` != 'CANCELADO'
+                  AND REPLACE(REPLACE(REPLACE(REPLACE(c.whatsapp, ' ', ''), '-', ''), '(', ''), ')', '') LIKE :phone
+                ORDER BY a.`hora_inicio` ASC");
+
+        $stmt->execute([
+            ':arena_id' => $arenaId,
+            ':data' => $today,
+            ':phone' => '%' . $cleanPhone . '%',
+        ]);
+
+        return $stmt->fetchAll() ?: [];
+    }
+
+    // Find upcoming bookings for a client by phone number
+    public function findFutureBookingsByPhone(int $arenaId, string $telefone, int $limit = 10): array
+    {
+        $cleanPhone = preg_replace('/\D/', '', $telefone);
+        $today = date('Y-m-d');
+
+        $stmt = $this->pdo->prepare("SELECT a.*, 
+                    q.nome AS quadra_nome, 
+                    m.nome AS modalidade_nome,
+                    c.nome AS cliente_nome, 
+                    c.whatsapp AS cliente_whatsapp 
+                FROM `agendamentos` a
+                JOIN `clientes` c ON a.cliente_id = c.id
+                LEFT JOIN `quadras` q ON a.quadra_id = q.id
+                LEFT JOIN `modalidades` m ON q.modalidade_id = m.id
+                WHERE a.`arena_id` = :arena_id 
+                  AND a.`data` >= :data
+                  AND a.`status` != 'CANCELADO'
+                  AND REPLACE(REPLACE(REPLACE(REPLACE(c.whatsapp, ' ', ''), '-', ''), '(', ''), ')', '') LIKE :phone
+                ORDER BY a.`data` ASC, a.`hora_inicio` ASC
+                LIMIT :limit");
+
+        $stmt->bindValue(':arena_id', $arenaId, PDO::PARAM_INT);
+        $stmt->bindValue(':data', $today);
+        $stmt->bindValue(':phone', '%' . $cleanPhone . '%');
+        $stmt->bindValue(':limit', max(1, $limit), PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll() ?: [];
+    }
+
+    // Mark checkin completed for a booking
+    public function markCheckin(int $id, string $origem = 'TOTEM'): bool
+    {
+        $origem = strtoupper(trim($origem));
+        if (!in_array($origem, ['TOTEM', 'PORTAL', 'BALCAO', 'RECEPCAO'], true)) {
+            $origem = 'TOTEM';
+        }
+
+        $stmt = $this->pdo->prepare("UPDATE `agendamentos` SET 
+            `checkin_em` = :checkin_em,
+            `checkin_origem` = :origem
+            WHERE `id` = :id AND `checkin_em` IS NULL");
+
+        return $stmt->execute([
+            ':checkin_em' => date('Y-m-d H:i:s'),
+            ':origem' => $origem,
+            ':id' => $id,
+        ]);
+    }
 }

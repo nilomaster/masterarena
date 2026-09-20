@@ -15,6 +15,18 @@ abstract class BaseController
         Response::success($data, $message, $statusCode);
     }
 
+    // Return standard ok response (alias for success 200)
+    protected function ok($data = null, string $message = 'Operacao realizada com sucesso.'): void
+    {
+        Response::success($data, $message, 200);
+    }
+
+    // Return server error response
+    protected function serverError(string $message = 'Erro interno do servidor.', ?string $debug = null): void
+    {
+        Response::serverError($message, $debug);
+    }
+
     // Return standard created response
     protected function created($data = null, string $message = 'Registro criado com sucesso.'): void
     {

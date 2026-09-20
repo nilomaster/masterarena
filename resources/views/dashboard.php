@@ -548,6 +548,12 @@
                     <span>Bar & Comandas</span>
                 </a>
             </li>
+            <li class="menu-item" id="menu-whatsapp">
+                <a href="javascript:void(0)" onclick="switchTab('whatsapp')">
+                    <span class="menu-icon">&#128241;</span>
+                    <span>WhatsApp</span>
+                </a>
+            </li>
             <li class="menu-item" id="menu-configuracoes">
                 <a href="javascript:void(0)" onclick="switchTab('configuracoes')">
                     <span class="menu-icon">&#9881;</span>
@@ -978,6 +984,158 @@
                 </div>
             </section>
 
+            <!-- TAB 8: NOTIFICACOES AUTOMATICAS WHATSAPP -->
+            <section id="view-whatsapp" class="tab-view">
+                <div class="panel-box">
+                    <div class="panel-header">
+                        <div>
+                            <h2 class="panel-title">Notificacoes Automaticas via WhatsApp</h2>
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">
+                                Configure o gateway (Evolution API, Z-API ou Simulador), habilite disparos de PIX, confirmacoes e lembretes de jogo.
+                            </span>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button onclick="runWhatsAppReminders()" class="action-btn-pill" style="border-color: rgba(6, 182, 212, 0.4); color: var(--accent-cyan);">
+                                &#128260; Rodar Varredura de Lembretes
+                            </button>
+                            <button onclick="saveWhatsAppConfig()" class="action-btn-primary">
+                                &#128190; Salvar Configuracoes
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1.3fr 1fr; gap: 24px; margin-top: 16px;">
+                        <!-- Left: Gateway Parameters & Automatic Events -->
+                        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border); border-radius: 12px; padding: 20px;">
+                            <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 16px; color: var(--accent-lime); display: flex; align-items: center; gap: 8px;">
+                                &#9881; Parametros do Gateway de WhatsApp
+                            </h3>
+
+                            <div style="margin-bottom: 14px;">
+                                <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">Provedor / Driver</label>
+                                <select id="wa_provider" style="width: 100%; padding: 10px 14px; background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border); border-radius: 8px; color: #fff; font-size: 0.9rem;">
+                                    <option value="SIMULATOR">Simulador de Testes (Mock Nativo - Sem envio real)</option>
+                                    <option value="EVOLUTION_API">Evolution API (v1 / v2 Self-Hosted)</option>
+                                    <option value="ZAPI">Z-API (SaaS Oficial)</option>
+                                </select>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                                <div>
+                                    <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">URL da API</label>
+                                    <input type="text" id="wa_api_url" placeholder="https://api.meuservidor.com" style="width: 100%; padding: 9px 12px; background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border); border-radius: 8px; color: #fff; font-size: 0.85rem;">
+                                </div>
+                                <div>
+                                    <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">Instancia / Session ID</label>
+                                    <input type="text" id="wa_instance" placeholder="arena-matriz" style="width: 100%; padding: 9px 12px; background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border); border-radius: 8px; color: #fff; font-size: 0.85rem;">
+                                </div>
+                            </div>
+
+                            <div style="margin-bottom: 18px;">
+                                <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">Token de Autenticacao / API Key</label>
+                                <input type="password" id="wa_api_token" placeholder="Bearer Token ou Global Key" style="width: 100%; padding: 9px 12px; background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border); border-radius: 8px; color: #fff; font-size: 0.85rem;">
+                            </div>
+
+                            <h4 style="font-size: 0.85rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; border-top: 1px solid var(--border); padding-top: 14px;">
+                                Eventos de Disparo Automatico
+                            </h4>
+
+                            <div style="display: flex; flex-direction: column; gap: 10px;">
+                                <label style="display: flex; align-items: center; gap: 10px; font-size: 0.88rem; cursor: pointer;">
+                                    <input type="checkbox" id="wa_notify_pix" style="accent-color: var(--accent-lime); width: 16px; height: 16px;">
+                                    <span><strong>PIX Copia e Cola Gerado:</strong> Disparar chave e QR Code imediatamente</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 10px; font-size: 0.88rem; cursor: pointer;">
+                                    <input type="checkbox" id="wa_notify_confirmed" style="accent-color: var(--accent-lime); width: 16px; height: 16px;">
+                                    <span><strong>Reserva Confirmada:</strong> Enviar comprovante e codigo de check-in</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 10px; font-size: 0.88rem; cursor: pointer;">
+                                    <input type="checkbox" id="wa_notify_cancelled" style="accent-color: var(--accent-lime); width: 16px; height: 16px;">
+                                    <span><strong>Reserva Cancelada:</strong> Notificar liberacao do horario</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 10px; font-size: 0.88rem; cursor: pointer;">
+                                    <input type="checkbox" id="wa_notify_reminder" style="accent-color: var(--accent-lime); width: 16px; height: 16px;">
+                                    <span><strong>Lembrete Previo de Jogo:</strong> Notificar atletas antes da partida</span>
+                                </label>
+                            </div>
+
+                            <div style="margin-top: 14px; display: flex; align-items: center; gap: 12px;">
+                                <label style="font-size: 0.82rem; color: var(--text-muted); font-weight: 600;">Antecedencia do Lembrete:</label>
+                                <select id="wa_reminder_hours" style="padding: 6px 12px; background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border); border-radius: 6px; color: #fff; font-size: 0.85rem;">
+                                    <option value="1">1 hora antes</option>
+                                    <option value="2" selected>2 horas antes (Recomendado)</option>
+                                    <option value="4">4 horas antes</option>
+                                    <option value="24">24 horas antes</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Right: Fast Test Message Box -->
+                        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
+                            <div>
+                                <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 16px; color: var(--accent-cyan); display: flex; align-items: center; gap: 8px;">
+                                    &#128172; Teste de Disparo em Tempo Real
+                                </h3>
+                                <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 14px; line-height: 1.4;">
+                                    Envie uma mensagem instantanea para verificar se sua instancia e credenciais estao conectadas corretamente.
+                                </p>
+
+                                <div style="margin-bottom: 12px;">
+                                    <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">Numero do Destinatario</label>
+                                    <input type="text" id="wa_test_phone" placeholder="Ex: 11999998888 ou 5511999998888" style="width: 100%; padding: 9px 12px; background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border); border-radius: 8px; color: #fff; font-size: 0.85rem;">
+                                </div>
+
+                                <div style="margin-bottom: 16px;">
+                                    <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">Mensagem de Teste</label>
+                                    <textarea id="wa_test_message" rows="3" style="width: 100%; padding: 9px 12px; background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border); border-radius: 8px; color: #fff; font-size: 0.85rem; resize: vertical;">Ola! Esta e uma mensagem de teste do Master Arena SaaS.</textarea>
+                                </div>
+
+                                <button onclick="sendWhatsAppTest()" class="action-btn-pill" style="width: 100%; padding: 10px; background: rgba(6, 182, 212, 0.15); border-color: rgba(6, 182, 212, 0.4); color: var(--accent-cyan); font-weight: 700; font-size: 0.88rem;">
+                                    &#128640; Disparar Mensagem de Teste
+                                </button>
+                            </div>
+
+                            <div id="wa_test_result" style="margin-top: 14px; padding: 10px 14px; border-radius: 8px; font-size: 0.8rem; display: none;">
+                                <!-- Feedback info -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notification Audit Logs Table -->
+                    <div style="margin-top: 28px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                            <h3 style="font-size: 1.05rem; font-weight: 700;">
+                                Historico e Auditoria de Notificacoes
+                            </h3>
+                            <button onclick="loadWhatsAppLogs()" class="action-btn-pill">
+                                &#128260; Atualizar Extrato
+                            </button>
+                        </div>
+
+                        <table class="arena-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Data / Hora</th>
+                                    <th>Destinatario</th>
+                                    <th>Evento</th>
+                                    <th>Provedor</th>
+                                    <th>Status</th>
+                                    <th>ID Externo / Resposta</th>
+                                </tr>
+                            </thead>
+                            <tbody id="waLogsBody">
+                                <tr>
+                                    <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 24px;">
+                                        Carregando historico de disparos...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
         </div>
     </main>
 
@@ -1063,6 +1221,9 @@
                 loadGrade();
             } else if (tabId === 'financeiro') {
                 loadFinancialSummary();
+            } else if (tabId === 'whatsapp') {
+                loadWhatsAppConfig();
+                loadWhatsAppLogs();
             }
         }
 
@@ -1940,6 +2101,249 @@
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;');
+        }
+
+        // WhatsApp Notifications Logic (ASCII comments only)
+        async function loadWhatsAppConfig() {
+            const token = sessionStorage.getItem('masterarena_token');
+            if (!token || !currentArenaId) return;
+
+            try {
+                const res = await fetch(`/api/v1/arenas/${currentArenaId}/notificacoes/whatsapp/config`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                if (!res.ok) return;
+                const data = await res.json();
+                const cfg = data.data || {};
+
+                const provEl = document.getElementById('wa_provider');
+                if (provEl) provEl.value = cfg.whatsapp_provider || 'SIMULATOR';
+
+                const urlEl = document.getElementById('wa_api_url');
+                if (urlEl) urlEl.value = cfg.whatsapp_api_url || '';
+
+                const tokenEl = document.getElementById('wa_api_token');
+                if (tokenEl) tokenEl.value = cfg.whatsapp_api_token || '';
+
+                const instEl = document.getElementById('wa_instance');
+                if (instEl) instEl.value = cfg.whatsapp_instance || '';
+
+                const pixVal = cfg.whatsapp_notify_pix !== undefined ? cfg.whatsapp_notify_pix : cfg.whatsapp_notify_pix_pending;
+                const pixEl = document.getElementById('wa_notify_pix');
+                if (pixEl) pixEl.checked = pixVal === undefined || pixVal === true || String(pixVal) === '1';
+
+                const confVal = cfg.whatsapp_notify_confirmed !== undefined ? cfg.whatsapp_notify_confirmed : cfg.whatsapp_notify_booking_confirmed;
+                const confEl = document.getElementById('wa_notify_confirmed');
+                if (confEl) confEl.checked = confVal === undefined || confVal === true || String(confVal) === '1';
+
+                const cancVal = cfg.whatsapp_notify_cancelled !== undefined ? cfg.whatsapp_notify_cancelled : cfg.whatsapp_notify_booking_cancelled;
+                const cancEl = document.getElementById('wa_notify_cancelled');
+                if (cancEl) cancEl.checked = cancVal === undefined || cancVal === true || String(cancVal) === '1';
+
+                const remVal = cfg.whatsapp_notify_reminder !== undefined ? cfg.whatsapp_notify_reminder : cfg.whatsapp_notify_game_reminder;
+                const remEl = document.getElementById('wa_notify_reminder');
+                if (remEl) remEl.checked = remVal === undefined || remVal === true || String(remVal) === '1';
+
+                const hrsEl = document.getElementById('wa_reminder_hours');
+                if (hrsEl) hrsEl.value = cfg.whatsapp_reminder_hours || cfg.whatsapp_reminder_hours_before || '2';
+            } catch (e) {
+                // Ignore config fetch errors
+            }
+        }
+
+        async function saveWhatsAppConfig() {
+            const token = sessionStorage.getItem('masterarena_token');
+            if (!token || !currentArenaId) return;
+
+            const payload = {
+                whatsapp_provider: document.getElementById('wa_provider').value,
+                whatsapp_api_url: document.getElementById('wa_api_url').value.trim(),
+                whatsapp_api_token: document.getElementById('wa_api_token').value.trim(),
+                whatsapp_instance: document.getElementById('wa_instance').value.trim(),
+                whatsapp_notify_pix: document.getElementById('wa_notify_pix').checked ? 1 : 0,
+                whatsapp_notify_pix_pending: document.getElementById('wa_notify_pix').checked ? 1 : 0,
+                whatsapp_notify_confirmed: document.getElementById('wa_notify_confirmed').checked ? 1 : 0,
+                whatsapp_notify_booking_confirmed: document.getElementById('wa_notify_confirmed').checked ? 1 : 0,
+                whatsapp_notify_cancelled: document.getElementById('wa_notify_cancelled').checked ? 1 : 0,
+                whatsapp_notify_booking_cancelled: document.getElementById('wa_notify_cancelled').checked ? 1 : 0,
+                whatsapp_notify_reminder: document.getElementById('wa_notify_reminder').checked ? 1 : 0,
+                whatsapp_notify_game_reminder: document.getElementById('wa_notify_reminder').checked ? 1 : 0,
+                whatsapp_reminder_hours: parseInt(document.getElementById('wa_reminder_hours').value, 10) || 2,
+                whatsapp_reminder_hours_before: parseInt(document.getElementById('wa_reminder_hours').value, 10) || 2
+            };
+
+            try {
+                const res = await fetch(`/api/v1/arenas/${currentArenaId}/notificacoes/whatsapp/config`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert('Configuracoes de WhatsApp salvas com sucesso!');
+                } else {
+                    alert(data.message || 'Erro ao salvar configuracoes de WhatsApp.');
+                }
+            } catch (e) {
+                alert('Falha de comunicacao ao salvar configuracoes.');
+            }
+        }
+
+        async function sendWhatsAppTest() {
+            const token = sessionStorage.getItem('masterarena_token');
+            const phone = (document.getElementById('wa_test_phone').value || '').trim();
+            const message = (document.getElementById('wa_test_message').value || '').trim();
+            const resultBox = document.getElementById('wa_test_result');
+
+            if (!phone) {
+                alert('Informe um numero de telefone com DDD para teste.');
+                return;
+            }
+
+            if (resultBox) {
+                resultBox.style.display = 'block';
+                resultBox.style.background = 'rgba(6, 182, 212, 0.15)';
+                resultBox.style.color = 'var(--accent-cyan)';
+                resultBox.innerText = 'Enviando disparo de teste...';
+            }
+
+            try {
+                const res = await fetch(`/api/v1/arenas/${currentArenaId}/notificacoes/whatsapp/testar`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ telefone: phone, mensagem: message })
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    if (resultBox) {
+                        resultBox.style.background = 'rgba(16, 185, 129, 0.15)';
+                        resultBox.style.color = 'var(--accent-lime)';
+                        resultBox.innerText = `Sucesso! Mensagem disparada. Provedor: ${data.data.provider}. ID Externo: ${data.data.external_message_id || 'N/A'}`;
+                    }
+                    loadWhatsAppLogs();
+                } else {
+                    if (resultBox) {
+                        resultBox.style.background = 'rgba(239, 68, 68, 0.15)';
+                        resultBox.style.color = '#fca5a5';
+                        resultBox.innerText = `Erro: ${data.message || 'Falha ao disparar'}`;
+                    }
+                }
+            } catch (e) {
+                if (resultBox) {
+                    resultBox.style.background = 'rgba(239, 68, 68, 0.15)';
+                    resultBox.style.color = '#fca5a5';
+                    resultBox.innerText = 'Erro de comunicacao com a API.';
+                }
+            }
+        }
+
+        async function runWhatsAppReminders() {
+            const token = sessionStorage.getItem('masterarena_token');
+            try {
+                const res = await fetch(`/api/v1/arenas/${currentArenaId}/notificacoes/whatsapp/processar-lembretes`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    const count = data.data && data.data.lembretes_enviados ? data.data.lembretes_enviados : 0;
+                    alert(`Varredura concluida com sucesso! Lembretes enviados: ${count}`);
+                    loadWhatsAppLogs();
+                } else {
+                    alert(data.message || 'Erro ao processar lembretes.');
+                }
+            } catch (e) {
+                alert('Falha de conexao ao executar varredura.');
+            }
+        }
+
+        async function loadWhatsAppLogs() {
+            const token = sessionStorage.getItem('masterarena_token');
+            const tbody = document.getElementById('waLogsBody');
+            if (!token || !currentArenaId || !tbody) return;
+
+            try {
+                const res = await fetch(`/api/v1/arenas/${currentArenaId}/notificacoes/whatsapp?limit=25`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                if (!res.ok) return;
+                const data = await res.json();
+                const logs = data.data && data.data.notificacoes ? data.data.notificacoes : [];
+
+                if (logs.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 24px;">
+                                Nenhuma notificacao de WhatsApp enviada ate o momento para esta arena.
+                            </td>
+                        </tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = logs.map(l => {
+                    const isSuccess = l.status === 'ENVIADO';
+                    const badgeBg = isSuccess ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)';
+                    const badgeColor = isSuccess ? '#00f279' : '#fca5a5';
+                    const dt = l.created_at ? l.created_at.substring(0, 19).replace('T', ' ') : 'N/A';
+
+                    let extId = '-';
+                    if (l.gateway_response) {
+                        try {
+                            const parsed = typeof l.gateway_response === 'string' ? JSON.parse(l.gateway_response) : l.gateway_response;
+                            extId = parsed.mock_message_id || parsed.id || parsed.messageId || l.gateway_response;
+                        } catch(e) {
+                            extId = l.gateway_response;
+                        }
+                    } else if (l.erro) {
+                        extId = l.erro;
+                    } else if (l.mensagem_id_externo) {
+                        extId = l.mensagem_id_externo;
+                    }
+
+                    const phone = l.telefone || l.destinatario_telefone || '-';
+                    const tipo = l.tipo || l.tipo_evento || 'TESTE';
+                    const provider = l.gateway_provider || l.provider || 'SIMULATOR';
+
+                    return `
+                        <tr>
+                            <td><code>#${l.id}</code></td>
+                            <td>${dt}</td>
+                            <td><strong>${escapeHtml(phone)}</strong></td>
+                            <td><span style="color: var(--accent-cyan); font-weight: 600;">${escapeHtml(tipo)}</span></td>
+                            <td><span style="font-size: 0.8rem; color: #cbd5e1;">${escapeHtml(provider)}</span></td>
+                            <td>
+                                <span style="background: ${badgeBg}; color: ${badgeColor}; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700;">
+                                    ${escapeHtml(l.status)}
+                                </span>
+                            </td>
+                            <td>
+                                <span style="font-size: 0.8rem; color: var(--text-muted); word-break: break-all;">
+                                    ${escapeHtml(extId)}
+                                </span>
+                            </td>
+                        </tr>`;
+                }).join('');
+            } catch (e) {
+                // Ignore logs fetch error
+            }
         }
 
         async function handleLogout() {

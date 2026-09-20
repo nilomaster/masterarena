@@ -49,6 +49,12 @@ class Pagamento
         return $row ?: null;
     }
 
+    // Alias for findByAgendamentoId
+    public function findByBookingId(int $agendamentoId): ?array
+    {
+        return $this->findByAgendamentoId($agendamentoId);
+    }
+
     // List payments for an arena with multiple filters and pagination
     public function listByArena(int $arenaId, array $filters = [], int $limit = 50, int $offset = 0): array
     {
