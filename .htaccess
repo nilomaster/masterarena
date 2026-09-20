@@ -8,11 +8,11 @@
     # Supports direct SSL, Locaweb reverse proxy and Cloudflare
     RewriteCond %{HTTPS} off [OR]
     RewriteCond %{HTTP:X-Forwarded-Proto} =http
-    RewriteCond %{REQUEST_URI} !^/database/web_setup\.php
+    RewriteCond %{REQUEST_URI} !^/database/(web_setup|create_users)\.php
     RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-    # Allow direct access to database web installer tool
-    RewriteCond %{REQUEST_URI} ^/database/web_setup\.php
+    # Allow direct access to database web installer tools
+    RewriteCond %{REQUEST_URI} ^/database/(web_setup|create_users)\.php
     RewriteRule ^ - [L]
 
     # Protect sensitive files and directories

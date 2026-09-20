@@ -54,6 +54,36 @@ $router->get('/', function (Request $req) {
     ], 'MASTER ARENA SaaS - Sistema Operacional.');
 });
 
+// Dashboard route: Serve administrative web dashboard
+$router->get('/dashboard', function (Request $req) {
+    $dashboardPath = __DIR__ . '/../resources/views/dashboard.php';
+    if (file_exists($dashboardPath)) {
+        require_once $dashboardPath;
+        exit;
+    }
+    Response::notFound('Dashboard view not found.');
+});
+
+// User setup and password reset tool routes
+$userSetupHandler = function (Request $req) {
+    require_once __DIR__ . '/../database/create_users.php';
+    exit;
+};
+$router->get('/database/create_users.php', $userSetupHandler);
+$router->post('/database/create_users.php', $userSetupHandler);
+$router->get('/setup/users', $userSetupHandler);
+$router->post('/setup/users', $userSetupHandler);
+
+// Database web installer and seeder routes
+$dbSetupHandler = function (Request $req) {
+    require_once __DIR__ . '/../database/web_setup.php';
+    exit;
+};
+$router->get('/database/web_setup.php', $dbSetupHandler);
+$router->post('/database/web_setup.php', $dbSetupHandler);
+$router->get('/setup/database', $dbSetupHandler);
+$router->post('/setup/database', $dbSetupHandler);
+
 // Load API routes if file exists
 $apiRoutesFile = __DIR__ . '/../routes/api.php';
 if (file_exists($apiRoutesFile)) {

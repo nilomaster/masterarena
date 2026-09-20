@@ -588,8 +588,8 @@
                         sessionStorage.setItem('masterarena_user', JSON.stringify(data.data.user));
                     }
                     setTimeout(() => {
-                        window.location.reload();
-                    }, 1200);
+                        window.location.href = '/dashboard';
+                    }, 1000);
                 } else {
                     feedback.className = 'feedback-msg feedback-error';
                     feedback.innerText = data.message || 'Falha na autenticacao. Verifique seus dados.';

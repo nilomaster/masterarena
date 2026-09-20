@@ -13,6 +13,7 @@ use App\Middleware\RequireStaffMiddleware;
 use App\Middleware\RequireSuperadminMiddleware;
 use App\Controllers\Api\V1\ApiController;
 use App\Controllers\Api\V1\AuthController;
+use App\Controllers\Api\V1\ArenaController;
 
 /** @var Router $router */
 
@@ -43,6 +44,18 @@ $router->group('/api/v1', function (Router $api) {
     $api->get('/staff/access', function (Request $req) {
         Response::success(['access' => 'granted', 'roles' => ['SUPERADMIN', 'ADMIN', 'FUNCIONARIO']], 'Acesso autorizado para Equipe da Arena.');
     }, [AuthMiddleware::class, RequireStaffMiddleware::class]);
+
+    // Public Arena Lookup by Slug (Client Booking Portal)
+    $api->get('/arenas/by-slug/{slug}', [ArenaController::class, 'bySlug']);
+
+    // Multi-Tenant Arena Management Endpoints
+    $api->get('/arenas', [ArenaController::class, 'index'], [AuthMiddleware::class, RequireSuperadminMiddleware::class]);
+    $api->post('/arenas', [ArenaController::class, 'create'], [AuthMiddleware::class, RequireSuperadminMiddleware::class]);
+    $api->get('/arenas/{id}', [ArenaController::class, 'show'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
+    $api->put('/arenas/{id}', [ArenaController::class, 'update'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
+    $api->patch('/arenas/{id}/status', [ArenaController::class, 'updateStatus'], [AuthMiddleware::class, RequireSuperadminMiddleware::class]);
+    $api->get('/arenas/{id}/settings', [ArenaController::class, 'getSettings'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
+    $api->put('/arenas/{id}/settings', [ArenaController::class, 'updateSettings'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
 }, [
     CorsMiddleware::class,
     JsonMiddleware::class,
