@@ -22,6 +22,7 @@ class PaymentService
     private Arena $arenaModel;
     private PixPayloadService $pixPayloadService;
     private AuditLogger $auditLogger;
+    private WhatsAppService $whatsAppService;
 
     public function __construct(?PDO $pdo = null)
     {
@@ -32,6 +33,7 @@ class PaymentService
         $this->arenaModel = new Arena($this->pdo);
         $this->pixPayloadService = new PixPayloadService();
         $this->auditLogger = new AuditLogger($this->pdo);
+        $this->whatsAppService = new WhatsAppService($this->pdo);
     }
 
     // Generate dynamic PIX payment for a specific booking
@@ -124,6 +126,13 @@ class PaymentService
 
         $payment = $this->pagamentoModel->findById($paymentId);
 
+        // Non-blocking automated WhatsApp notification
+        try {
+            $this->whatsAppService->sendPixPending($agendamentoId, $pixPayload);
+        } catch (Throwable $e) {
+            // Log or ignore notification failure
+        }
+
         return [
             'success' => true,
             'code' => 201,
@@ -209,6 +218,15 @@ class PaymentService
             );
 
             $this->pdo->commit();
+
+            // Non-blocking automated WhatsApp confirmation
+            if ($agendamentoId) {
+                try {
+                    $this->whatsAppService->sendBookingConfirmed($agendamentoId);
+                } catch (Throwable $e) {
+                    // Log or ignore notification failure
+                }
+            }
 
             $updatedPayment = $this->pagamentoModel->findById($paymentId);
 

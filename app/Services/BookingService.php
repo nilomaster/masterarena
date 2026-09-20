@@ -316,6 +316,14 @@ class BookingService
             ['motivo' => $motivo]
         );
 
+        // Non-blocking automated WhatsApp cancellation notice
+        try {
+            $whatsAppService = new WhatsAppService($this->pdo);
+            $whatsAppService->sendBookingCancelled($bookingId, $motivo);
+        } catch (Throwable $e) {
+            // Log or ignore notification failure
+        }
+
         $updated = $this->agendamentoModel->findById($bookingId);
 
         return [

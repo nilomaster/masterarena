@@ -22,6 +22,7 @@ use App\Controllers\Api\V1\BookingController;
 use App\Controllers\Api\V1\PaymentController;
 use App\Controllers\Api\V1\CashRegisterController;
 use App\Controllers\Api\V1\PortalController;
+use App\Controllers\Api\V1\WhatsAppNotificationController;
 use App\Middleware\OptionalAuthMiddleware;
 
 /** @var Router $router */
@@ -138,6 +139,13 @@ $router->group('/api/v1', function (Router $api) {
     $api->post('/arenas/{arena_id}/clientes/minhas-reservas', [PortalController::class, 'getMyBookings']);
     $api->get('/agendamentos/{id}/public-status', [PortalController::class, 'getPublicStatus']);
     $api->post('/arenas/{arena_id}/checkin', [PortalController::class, 'checkin']);
+
+    // WhatsApp Automated Notifications Endpoints
+    $api->get('/arenas/{arena_id}/notificacoes/whatsapp', [WhatsAppNotificationController::class, 'index'], [AuthMiddleware::class, RequireStaffMiddleware::class]);
+    $api->get('/arenas/{arena_id}/notificacoes/whatsapp/config', [WhatsAppNotificationController::class, 'getConfig'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
+    $api->put('/arenas/{arena_id}/notificacoes/whatsapp/config', [WhatsAppNotificationController::class, 'updateConfig'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
+    $api->post('/arenas/{arena_id}/notificacoes/whatsapp/testar', [WhatsAppNotificationController::class, 'testMessage'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
+    $api->post('/arenas/{arena_id}/notificacoes/whatsapp/processar-lembretes', [WhatsAppNotificationController::class, 'processReminders'], [AuthMiddleware::class, RequireStaffMiddleware::class]);
 }, [
     CorsMiddleware::class,
     JsonMiddleware::class,
