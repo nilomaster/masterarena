@@ -16,6 +16,7 @@ use App\Controllers\Api\V1\AuthController;
 use App\Controllers\Api\V1\ArenaController;
 use App\Controllers\Api\V1\ModalidadeController;
 use App\Controllers\Api\V1\QuadraController;
+use App\Controllers\Api\V1\ScheduleController;
 use App\Middleware\OptionalAuthMiddleware;
 
 /** @var Router $router */
@@ -74,6 +75,21 @@ $router->group('/api/v1', function (Router $api) {
     $api->put('/quadras/{id}', [QuadraController::class, 'update'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
     $api->patch('/quadras/{id}/status', [QuadraController::class, 'updateStatus'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
     $api->delete('/quadras/{id}', [QuadraController::class, 'delete'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
+
+    // Schedule & Availability Grid Engine Endpoints
+    $api->get('/arenas/{arena_id}/grade', [ScheduleController::class, 'grade'], [OptionalAuthMiddleware::class]);
+    $api->get('/arenas/{arena_id}/horarios', [ScheduleController::class, 'getHorarios'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
+    $api->post('/arenas/{arena_id}/horarios', [ScheduleController::class, 'saveHorarios'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
+
+    // Court Blocks (Bloqueios)
+    $api->get('/arenas/{arena_id}/bloqueios', [ScheduleController::class, 'listBloqueios'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
+    $api->post('/arenas/{arena_id}/bloqueios', [ScheduleController::class, 'createBloqueio'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
+    $api->delete('/bloqueios/{id}', [ScheduleController::class, 'deleteBloqueio'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
+
+    // Dynamic Pricing Rules (Valores Horarios)
+    $api->get('/arenas/{arena_id}/valores-horarios', [ScheduleController::class, 'listValores'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
+    $api->post('/arenas/{arena_id}/valores-horarios', [ScheduleController::class, 'createValor'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
+    $api->delete('/valores-horarios/{id}', [ScheduleController::class, 'deleteValor'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
 }, [
     CorsMiddleware::class,
     JsonMiddleware::class,

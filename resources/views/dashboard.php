@@ -812,24 +812,35 @@
                 </div>
             </section>
 
-            <!-- TAB 4: GRADE DE HORARIOS (PREVIEW DA ETAPA 6) -->
+            <!-- TAB 4: GRADE DE HORARIOS E DISPONIBILIDADE -->
             <section id="view-agendamentos" class="tab-view">
                 <div class="panel-box">
-                    <div class="panel-header">
+                    <div class="panel-header" style="flex-wrap: wrap; gap: 16px;">
                         <div>
-                            <h2 class="panel-title">Grade de Horarios e Disponibilidade</h2>
-                            <span style="font-size: 0.8rem; color: var(--text-muted);">Motor de agendamentos e controle de ocupacao de quadras.</span>
+                            <h2 class="panel-title">Grade de Horarios & Disponibilidade de Quadras</h2>
+                            <span style="font-size: 0.8rem; color: var(--text-muted);" id="gradeHeaderSubtitle">
+                                Visualize slots livres, precos dinamicos, reservas e bloqueios operacionais em tempo real.
+                            </span>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <input type="date" id="gradeDateInput" onchange="loadGrade()" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 0.88rem; outline: none;">
+                            <button onclick="setGradeToday()" class="action-btn-pill">Hoje</button>
+                            <button onclick="setGradeTomorrow()" class="action-btn-pill">Amanha</button>
+                            <button onclick="promptCreateBlock()" class="action-btn-primary">+ Bloquear Horario</button>
                         </div>
                     </div>
-                    <div style="background: rgba(6, 182, 212, 0.08); border: 1px dashed rgba(6, 182, 212, 0.3); border-radius: 12px; padding: 36px; text-align: center;">
-                        <div style="font-size: 2.5rem; margin-bottom: 12px;">&#128197;</div>
-                        <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 8px;">Modulo de Horarios & Grade de Agendamento</h3>
-                        <p style="color: var(--text-muted); max-width: 600px; margin: 0 auto 20px; font-size: 0.92rem;">
-                            Este modulo faz parte da <strong>ETAPA 6: Motor de Horarios e Grade de Disponibilidade</strong>. Ele integrara a geracao de slots de 60/90 minutos, bloqueios de manutencao e controle de reservas recorrentes.
-                        </p>
-                        <button onclick="switchTab('quadras')" class="action-btn-primary">
-                            Gerenciar Quadras Cadastradas
-                        </button>
+
+                    <!-- Day info badge -->
+                    <div id="gradeDaySummary" style="display: flex; align-items: center; gap: 12px; background: rgba(6, 182, 212, 0.08); border: 1px solid rgba(6, 182, 212, 0.2); border-radius: 10px; padding: 12px 18px; margin-bottom: 24px; font-size: 0.88rem;">
+                        <span style="font-size: 1.2rem;">&#128197;</span>
+                        <span id="gradeDaySummaryText">Carregando dados da grade...</span>
+                    </div>
+
+                    <!-- Courts Grid Columns -->
+                    <div id="gradeCourtsGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                        <div style="text-align: center; color: var(--text-muted); padding: 36px; grid-column: 1 / -1;">
+                            Carregando grade de disponibilidade...
+                        </div>
                     </div>
                 </div>
             </section>
@@ -979,11 +990,10 @@
                 loadModalidades();
             } else if (tabId === 'arenas') {
                 loadArenaDetails();
+            } else if (tabId === 'agendamentos') {
+                loadGrade();
             }
-        }
-
-        // Fetch and Render Courts
-        async function loadCourts() {
+        }async function loadCourts() {
             const token = sessionStorage.getItem('masterarena_token');
             const dashTbody = document.getElementById('dashboardCourtsBody');
             const fullTbody = document.getElementById('fullCourtsTableBody');
@@ -1350,6 +1360,244 @@
                 }
             } catch (e) {
                 alert('Erro ao cadastrar quadra.');
+            }
+        }
+
+        // Schedule & Availability Grid Interactive Functions
+        function getSelectedGradeDate() {
+            const input = document.getElementById('gradeDateInput');
+            if (input && input.value) return input.value;
+            const today = new Date().toISOString().split('T')[0];
+            if (input) input.value = today;
+            return today;
+        }
+
+        function setGradeToday() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('gradeDateInput').value = today;
+            loadGrade();
+        }
+
+        function setGradeTomorrow() {
+            const d = new Date();
+            d.setDate(d.getDate() + 1);
+            const tomorrow = d.toISOString().split('T')[0];
+            document.getElementById('gradeDateInput').value = tomorrow;
+            loadGrade();
+        }
+
+        async function loadGrade() {
+            const date = getSelectedGradeDate();
+            const token = sessionStorage.getItem('masterarena_token');
+            const gridContainer = document.getElementById('gradeCourtsGrid');
+            const summaryText = document.getElementById('gradeDaySummaryText');
+
+            try {
+                const res = await fetch(`/api/v1/arenas/${currentArenaId}/grade?data=${date}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const json = await res.json();
+                const gradeData = json.data && json.data.grade ? json.data.grade : null;
+
+                if (!gradeData || !gradeData.quadras) {
+                    gridContainer.innerHTML = '<div style="color: #fca5a5; padding: 24px; text-align: center; grid-column: 1 / -1;">Falha ao carregar dados da grade.</div>';
+                    return;
+                }
+
+                // Update day summary header
+                summaryText.innerHTML = `<strong>${escapeHtml(gradeData.dia_semana_nome)} (${gradeData.data})</strong> &bull; Funcionamento: ${gradeData.horario_funcionamento.hora_inicio} as ${gradeData.horario_funcionamento.hora_fim} &bull; ${gradeData.total_quadras} quadra(s) monitorada(s)`;
+
+                if (gradeData.quadras.length === 0) {
+                    gridContainer.innerHTML = '<div style="color: var(--text-muted); padding: 36px; text-align: center; grid-column: 1 / -1;">Nenhuma quadra cadastrada para exibir na grade. Cadastre quadras na aba "Quadras & Esportes".</div>';
+                    return;
+                }
+
+                // Render Court columns with time slots
+                gridContainer.innerHTML = gradeData.quadras.map(court => {
+                    const slotsHtml = court.slots.map(slot => {
+                        let statusColor = '#00f279';
+                        let statusBg = 'rgba(16, 185, 129, 0.12)';
+                        let statusBorder = 'rgba(16, 185, 129, 0.3)';
+                        let extraAction = '';
+
+                        if (slot.status === 'BLOQUEADO') {
+                            statusColor = '#fbbf24';
+                            statusBg = 'rgba(245, 158, 11, 0.15)';
+                            statusBorder = 'rgba(245, 158, 11, 0.4)';
+                            if (slot.bloqueio_id) {
+                                extraAction = `<button onclick="deleteBlock(${slot.bloqueio_id})" style="background: none; border: none; color: #fca5a5; cursor: pointer; font-size: 0.72rem; text-decoration: underline;" title="Desbloquear">&#10006; Desbloquear</button>`;
+                            }
+                        } else if (slot.status === 'RESERVADO') {
+                            statusColor = '#f87171';
+                            statusBg = 'rgba(239, 68, 68, 0.15)';
+                            statusBorder = 'rgba(239, 68, 68, 0.4)';
+                        } else if (slot.status === 'MANUTENCAO') {
+                            statusColor = '#94a3b8';
+                            statusBg = 'rgba(148, 163, 184, 0.15)';
+                            statusBorder = 'rgba(148, 163, 184, 0.3)';
+                        } else {
+                            // LIVRE
+                            extraAction = `<button onclick="quickBlockSlot(${court.id}, '${slot.hora_inicio}', '${slot.hora_fim}')" style="background: none; border: none; color: var(--accent-cyan); cursor: pointer; font-size: 0.72rem;" title="Bloquear slot">&#128274; Bloquear</button>`;
+                        }
+
+                        return `
+                            <div style="background: ${statusBg}; border: 1px solid ${statusBorder}; border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <div>
+                                    <div style="font-weight: 700; font-size: 0.92rem; letter-spacing: -0.3px;">${slot.hora_inicio.substring(0, 5)} - ${slot.hora_fim.substring(0, 5)}</div>
+                                    <div style="font-size: 0.75rem; color: ${statusColor}; font-weight: 600;">
+                                        ${slot.status}${slot.motivo ? ' &bull; ' + escapeHtml(slot.motivo) : ''}
+                                    </div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-weight: 800; font-size: 0.95rem; color: #fff;">R$ ${parseFloat(slot.valor || 0).toFixed(2).replace('.', ',')}</div>
+                                    <div>${extraAction}</div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    return `
+                        <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; display: flex; flex-direction: column;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid var(--border); padding-bottom: 14px; margin-bottom: 14px;">
+                                <div>
+                                    <h4 style="font-size: 1.05rem; font-weight: 800;">${escapeHtml(court.nome)}</h4>
+                                    <span style="font-size: 0.8rem; color: var(--accent-cyan); font-weight: 600;">${escapeHtml(court.modalidade_nome)}</span>
+                                </div>
+                                <span style="font-size: 0.75rem; background: rgba(255,255,255,0.06); padding: 4px 8px; border-radius: 6px;">${court.capacidade} atletas</span>
+                            </div>
+                            <div style="max-height: 520px; overflow-y: auto; padding-right: 4px;">
+                                ${slotsHtml}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (err) {
+                gridContainer.innerHTML = '<div style="color: #fca5a5; padding: 24px; text-align: center; grid-column: 1 / -1;">Erro ao carregar a grade de horarios.</div>';
+            }
+        }
+
+        async function quickBlockSlot(courtId, horaInicio, horaFim) {
+            const date = getSelectedGradeDate();
+            const motivo = prompt(`Informe o motivo do bloqueio para o horario ${horaInicio.substring(0,5)} as ${horaFim.substring(0,5)}:`, 'Manutencao preventiva');
+            if (!motivo || !motivo.trim()) return;
+
+            const token = sessionStorage.getItem('masterarena_token');
+            try {
+                const res = await fetch(`/api/v1/arenas/${currentArenaId}/bloqueios`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        quadra_id: courtId,
+                        data_inicio: date,
+                        data_fim: date,
+                        hora_inicio: horaInicio,
+                        hora_fim: horaFim,
+                        motivo: motivo.trim()
+                    })
+                });
+
+                if (res.ok) {
+                    loadGrade();
+                } else {
+                    const data = await res.json();
+                    alert(data.message || 'Erro ao criar bloqueio.');
+                }
+            } catch (e) {
+                alert('Erro de comunicacao com a API.');
+            }
+        }
+
+        async function promptCreateBlock() {
+            const date = getSelectedGradeDate();
+            const token = sessionStorage.getItem('masterarena_token');
+
+            // Fetch available courts for prompt
+            const resCourts = await fetch(`/api/v1/arenas/${currentArenaId}/quadras`, {
+                headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+            });
+            const courtData = await resCourts.json();
+            const courts = courtData.data && courtData.data.quadras ? courtData.data.quadras : [];
+
+            if (courts.length === 0) {
+                alert('Cadastre primeiro ao menos uma quadra.');
+                return;
+            }
+
+            const courtOptions = courts.map(c => `${c.id}: ${c.nome}`).join('\n');
+            const courtIdStr = prompt(`Informe o ID da quadra para o bloqueio:\n\n${courtOptions}`, courts[0].id);
+            const courtId = parseInt(courtIdStr, 10);
+            if (!courtId) return;
+
+            const horaInicio = prompt('Hora de inicio (ex: 14:00:00):', '14:00:00');
+            if (!horaInicio) return;
+
+            const horaFim = prompt('Hora de fim (ex: 18:00:00):', '18:00:00');
+            if (!horaFim) return;
+
+            const motivo = prompt('Motivo do bloqueio (ex: Torneio Interno, Aulas, Manutencao):', 'Manutencao geral');
+            if (!motivo) return;
+
+            try {
+                const res = await fetch(`/api/v1/arenas/${currentArenaId}/bloqueios`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        quadra_id: courtId,
+                        data_inicio: date,
+                        data_fim: date,
+                        hora_inicio: horaInicio.trim(),
+                        hora_fim: horaFim.trim(),
+                        motivo: motivo.trim()
+                    })
+                });
+
+                if (res.ok) {
+                    alert('Bloqueio cadastrado com sucesso!');
+                    loadGrade();
+                } else {
+                    const data = await res.json();
+                    alert(data.message || 'Erro ao criar bloqueio.');
+                }
+            } catch (e) {
+                alert('Erro ao criar bloqueio.');
+            }
+        }
+
+        async function deleteBlock(blockId) {
+            if (!confirm('Deseja realmente remover este bloqueio e liberar o horario na grade?')) {
+                return;
+            }
+
+            const token = sessionStorage.getItem('masterarena_token');
+            try {
+                const res = await fetch(`/api/v1/bloqueios/${blockId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (res.ok) {
+                    loadGrade();
+                } else {
+                    const data = await res.json();
+                    alert(data.message || 'Erro ao remover bloqueio.');
+                }
+            } catch (e) {
+                alert('Erro ao remover bloqueio.');
             }
         }
 
