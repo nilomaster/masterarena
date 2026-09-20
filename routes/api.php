@@ -17,6 +17,8 @@ use App\Controllers\Api\V1\ArenaController;
 use App\Controllers\Api\V1\ModalidadeController;
 use App\Controllers\Api\V1\QuadraController;
 use App\Controllers\Api\V1\ScheduleController;
+use App\Controllers\Api\V1\CupomController;
+use App\Controllers\Api\V1\BookingController;
 use App\Middleware\OptionalAuthMiddleware;
 
 /** @var Router $router */
@@ -90,7 +92,26 @@ $router->group('/api/v1', function (Router $api) {
     $api->get('/arenas/{arena_id}/valores-horarios', [ScheduleController::class, 'listValores'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
     $api->post('/arenas/{arena_id}/valores-horarios', [ScheduleController::class, 'createValor'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
     $api->delete('/valores-horarios/{id}', [ScheduleController::class, 'deleteValor'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
+
+    // Discount Coupons (Cupons) Endpoints
+    $api->get('/arenas/{arena_id}/cupons', [CupomController::class, 'index'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
+    $api->post('/arenas/{arena_id}/cupons', [CupomController::class, 'create'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
+    $api->get('/cupons/{id}', [CupomController::class, 'show'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
+    $api->put('/cupons/{id}', [CupomController::class, 'update'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
+    $api->patch('/cupons/{id}/status', [CupomController::class, 'updateStatus'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
+    $api->delete('/cupons/{id}', [CupomController::class, 'delete'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
+    $api->post('/arenas/{arena_id}/cupons/validar', [CupomController::class, 'validar'], [OptionalAuthMiddleware::class]);
+
+
+    // Bookings & Reservations Endpoints
+    $api->get('/arenas/{arena_id}/agendamentos', [BookingController::class, 'index'], [AuthMiddleware::class]);
+    $api->post('/arenas/{arena_id}/agendamentos', [BookingController::class, 'create'], [OptionalAuthMiddleware::class]);
+    $api->get('/arenas/{arena_id}/agendamentos/stats', [BookingController::class, 'stats'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
+    $api->get('/agendamentos/{id}', [BookingController::class, 'show'], [OptionalAuthMiddleware::class]);
+    $api->patch('/agendamentos/{id}/status', [BookingController::class, 'updateStatus'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
+    $api->post('/agendamentos/{id}/cancelar', [BookingController::class, 'cancel'], [OptionalAuthMiddleware::class]);
 }, [
     CorsMiddleware::class,
     JsonMiddleware::class,
 ]);
+

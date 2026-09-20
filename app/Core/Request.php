@@ -177,6 +177,13 @@ class Request
         return $this->bodyParams[$key] ?? $default;
     }
 
+    // Get raw parsed body array
+    public function getBody(): array
+    {
+        return $this->bodyParams;
+    }
+
+
     // Get combined input from route, body and query
     public function all(): array
     {
