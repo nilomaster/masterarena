@@ -64,6 +64,28 @@ $router->get('/dashboard', function (Request $req) {
     Response::notFound('Dashboard view not found.');
 });
 
+// Customer Web Portal routes: /arena/{slug} or /portal/{slug}
+$portalHandler = function (Request $req) {
+    $portalPath = __DIR__ . '/../resources/views/portal.php';
+    if (file_exists($portalPath)) {
+        require_once $portalPath;
+        exit;
+    }
+    Response::notFound('Portal view not found.');
+};
+$router->get('/arena/{slug}', $portalHandler);
+$router->get('/portal/{slug}', $portalHandler);
+
+// Self-service Kiosk (Totem Touchscreen) route: /totem/{slug}
+$router->get('/totem/{slug}', function (Request $req) {
+    $totemPath = __DIR__ . '/../resources/views/totem.php';
+    if (file_exists($totemPath)) {
+        require_once $totemPath;
+        exit;
+    }
+    Response::notFound('Totem view not found.');
+});
+
 // User setup and password reset tool routes
 $userSetupHandler = function (Request $req) {
     require_once __DIR__ . '/../database/create_users.php';

@@ -188,13 +188,16 @@ class BookingService
                 $initialStatus = 'PENDENTE';
             }
 
+            // Generate unique checkin code
+            $codigoCheckin = 'CHK-' . strtoupper(substr(md5(uniqid((string)$arenaId . microtime(), true)), 0, 6));
+
             // Insert booking record
             $stmtInsert = $this->pdo->prepare("INSERT INTO `agendamentos` (
                 `arena_id`, `quadra_id`, `cliente_id`, `data`, `hora_inicio`, `hora_fim`,
-                `valor_original`, `desconto`, `valor_final`, `cupom_id`, `status`, `observacao`, `criado_por`
+                `valor_original`, `desconto`, `valor_final`, `cupom_id`, `status`, `codigo_checkin`, `observacao`, `criado_por`
             ) VALUES (
                 :arena_id, :quadra_id, :cliente_id, :data, :hora_inicio, :hora_fim,
-                :valor_original, :desconto, :valor_final, :cupom_id, :status, :observacao, :criado_por
+                :valor_original, :desconto, :valor_final, :cupom_id, :status, :codigo_checkin, :observacao, :criado_por
             )");
 
             $observacao = isset($data['observacao']) ? trim((string)$data['observacao']) : null;
@@ -211,6 +214,7 @@ class BookingService
                 ':valor_final' => $valorFinal,
                 ':cupom_id' => $cupomId,
                 ':status' => $initialStatus,
+                ':codigo_checkin' => $codigoCheckin,
                 ':observacao' => $observacao,
                 ':criado_por' => $userId,
             ]);

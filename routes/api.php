@@ -21,6 +21,7 @@ use App\Controllers\Api\V1\CupomController;
 use App\Controllers\Api\V1\BookingController;
 use App\Controllers\Api\V1\PaymentController;
 use App\Controllers\Api\V1\CashRegisterController;
+use App\Controllers\Api\V1\PortalController;
 use App\Middleware\OptionalAuthMiddleware;
 
 /** @var Router $router */
@@ -130,6 +131,13 @@ $router->group('/api/v1', function (Router $api) {
     $api->post('/arenas/{arena_id}/caixa/movimentacao', [CashRegisterController::class, 'movement'], [AuthMiddleware::class, RequireStaffMiddleware::class]);
     $api->post('/arenas/{arena_id}/caixa/fechar', [CashRegisterController::class, 'close'], [AuthMiddleware::class, RequireStaffMiddleware::class]);
     $api->get('/arenas/{arena_id}/caixa/historico', [CashRegisterController::class, 'history'], [AuthMiddleware::class, RequireAdminMiddleware::class]);
+
+    // Customer Web Portal & Totem Public Endpoints
+    $api->get('/arenas/{arena_id}/portal-info', [PortalController::class, 'getPortalInfo']);
+    $api->get('/arenas/slug/{slug}/portal-info', [PortalController::class, 'getPortalInfo']);
+    $api->post('/arenas/{arena_id}/clientes/minhas-reservas', [PortalController::class, 'getMyBookings']);
+    $api->get('/agendamentos/{id}/public-status', [PortalController::class, 'getPublicStatus']);
+    $api->post('/arenas/{arena_id}/checkin', [PortalController::class, 'checkin']);
 }, [
     CorsMiddleware::class,
     JsonMiddleware::class,
